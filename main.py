@@ -94,10 +94,5 @@ I wanna share it with you
 I feel like a millionaire""")
 
 
-async def main() -> None:
-    await dp.start_polling(bot, polling_timeout=25)
-
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    asyncio.run(main())
