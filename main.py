@@ -96,3 +96,4 @@ I feel like a millionaire""")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    app.run(debug=True, port=getenv("PORT", default=5000))
