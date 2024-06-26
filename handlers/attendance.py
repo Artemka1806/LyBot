@@ -18,7 +18,7 @@ class UserStatus(StatesGroup):
 
 @router.message(F.text == "🚗 Відвідування")
 async def attendance_command_handler(message: Message, state: FSMContext, user: Type) -> None:
-	await message.answer(f'Ваш статус - "{ass.ANSWER_OPTIONS[user.status]}".\nВиберіть статус:', reply_markup=ass.keyboard)
+	await message.answer(f'Ваш статус - "{ass.ANSWER_OPTIONS[int(user.status)]}".\nВиберіть статус:', reply_markup=ass.keyboard)
 	await state.set_state(UserStatus.sets_status)
 
 
