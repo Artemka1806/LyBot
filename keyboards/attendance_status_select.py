@@ -11,6 +11,8 @@ builder = ReplyKeyboardBuilder()
 for answer in ANSWER_OPTIONS:
 	builder.add(KeyboardButton(text=answer))
 
+builder.add(KeyboardButton(text="❌ Скасувати"))
+
 builder.adjust(2)
 
 keyboard = builder.as_markup(

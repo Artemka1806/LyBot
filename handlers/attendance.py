@@ -1,15 +1,17 @@
-from aiogram import Bot, Router, F
-from aiogram.filters import Command, StateFilter, MagicData
+from aiogram import Router, F, flags
+from aiogram.filters import MagicData
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from typing import Type
 
+from middlewares import menu
 from keyboards import attendance_status_select as ass
 from keyboards import main_menu
 
 router = Router()
 router.message.filter(MagicData(F.user))
+router.message.middleware(menu.MenuMiddleware())
 
 
 class UserStatus(StatesGroup):
@@ -31,4 +33,12 @@ async def status_selected(message: Message, state: FSMContext, user: Type) -> No
 	user.status = ass.ANSWER_OPTIONS.index(message.text)
 	user.save()
 
+	await state.clear()
 	await message.answer(f'Успішно оновлено статус на "{message.text}"', reply_markup=main_menu.keyboard(user))
+
+
+@router.message(F.text == "❌ Скасувати", UserStatus.sets_status)
+@flags.show_main_menu
+async def cancel_command_handler(message: Message, state: FSMContext, user: Type) -> None:
+	await state.clear()
+	await message.answer("OK")
