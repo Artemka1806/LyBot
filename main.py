@@ -1,7 +1,9 @@
 import asyncio
+import json
 import logging
 from os import getenv
 import sys
+import time
 from typing import Type
 
 from aiogram import Bot, Dispatcher, html, F, flags
@@ -9,11 +11,14 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command, MagicData
 from aiogram.types import Message
+from apscheduler.schedulers.background import BackgroundScheduler
 from mongoengine import connect
 from dotenv import load_dotenv
+import redis
+import requests
 
 from middlewares import auth, extra_data, menu
-from handlers import login, attendance
+from handlers import login, attendance, schedule
 from models.user import User
 from keyboards import main_menu
 
@@ -21,19 +26,20 @@ load_dotenv()
 
 TOKEN = getenv("BOT_TOKEN")
 MONGO_URI = getenv("MONGO_URI")
-
-WEBHOOK_PATH = f"/bot/{TOKEN}"
-WEBHOOK_URL = getenv("WEBHOOK_URL_BASE") + WEBHOOK_PATH
+REDIS_URL = getenv("REDIS_URL")
+API_URL = getenv("API_URL")
 
 dp = Dispatcher()
 dp.update.outer_middleware(auth.AuthMiddleware())
 dp.update.outer_middleware(extra_data.ExtraDataMiddleware())
 dp.message.middleware(menu.MenuMiddleware())
-dp.include_routers(login.router, attendance.router)
+dp.include_routers(login.router, attendance.router, schedule.router)
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 connect(host=MONGO_URI)
+
+r = redis.Redis.from_url(url=REDIS_URL)
 
 
 @dp.message(CommandStart(), MagicData(F.user))
@@ -64,8 +70,25 @@ I wanna share it with you
 I feel like a millionaire""")
 
 
+def save_api_data():
+	data = requests.get(API_URL + "/api/schedule").json()
+	r.set("schedule", json.dumps(data[0]["Schedule"]))
+	r.set("bells", json.dumps(data[0]["ScheduleBell"]))
+	r.set("extra", json.dumps(data[0]["ExtraClasses"]))
+	r.set("time_managment", json.dumps(data[0]["TimeManagementData"]))
+	r.set("last_save", int(time.time()))
+
+
 async def main():
-    await dp.start_polling(bot)
+	scheduler = BackgroundScheduler()
+	scheduler.configure(timezone="Europe/Kyiv")
+	scheduler.add_job(save_api_data, 'interval', minutes=5)
+	scheduler.start()
+	try:
+		await dp.start_polling(bot)
+	finally:
+		scheduler.shutdown()
+		await bot.session.close()
 
 
 if __name__ == "__main__":

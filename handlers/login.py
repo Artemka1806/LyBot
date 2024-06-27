@@ -2,6 +2,7 @@ from email.mime.text import MIMEText
 from os import getenv
 import random
 import smtplib
+from typing import Type
 
 from aiogram import Bot, Router, F
 from aiogram.filters import Command, StateFilter, MagicData
@@ -9,7 +10,6 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from dotenv import load_dotenv
-from typing import Type
 
 from models.user import User
 from keyboards import group_select, main_menu
@@ -104,7 +104,7 @@ async def wrong_email_handler(message: Message) -> None:
     await message.answer("Схоже, що ви вводите адресу стороннього поштового сервісу. Наразі підтримуються тільки пошти домену ztu.edu.ua")
 
 
-@router.message(Command("clearstate"))
+@router.message(Command("cancel"))
 async def clearstate_command_handler(message: Message, state: FSMContext) -> None:
     await state.clear()
     await message.answer("Успішно!")

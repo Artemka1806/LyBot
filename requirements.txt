@@ -1,5 +1,6 @@
 aiogram==3.8.0
-fastapi==0.111.0
-python-dotenv==1.0.1
+APScheduler==3.10.4
 mongoengine==0.28.2
-hypercorn==0.17.3
+python-dotenv==1.0.1
+redis==5.0.7
+requests==2.32.3
