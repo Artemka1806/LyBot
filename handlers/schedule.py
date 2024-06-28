@@ -49,9 +49,8 @@ async def answer_with_schedule(
 
 	if schedule_time == ScheduleTime.NOW:
 		if day > 4:
-			# await message.answer("Сьогодні вихідні")
-			# return
-			day = 4
+			await message.answer("Сьогодні вихідні")
+			return
 
 	if day == 4:
 		next_day = 0
