@@ -5,10 +5,9 @@ from os import getenv
 from typing import Type
 
 from aiogram import Bot, Router, F, flags, html
-from aiogram.types import Message, InlineKeyboardButton, CallbackQuery
+from aiogram.types import Message, URLInputFile, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import MagicData
-from aiogram.utils.chat_action import ChatActionSender
 
 import redis
 
@@ -50,8 +49,9 @@ async def answer_with_schedule(
 
 	if schedule_time == ScheduleTime.NOW:
 		if day > 4:
-			await message.answer("Сьогодні вихідні")
-			return
+			# await message.answer("Сьогодні вихідні")
+			# return
+			day = 4
 
 	if day == 4:
 		next_day = 0
@@ -84,6 +84,9 @@ async def answer_with_schedule(
 	builder = InlineKeyboardBuilder()
 	builder.button(text="◀️", callback_data=f"schedule_{previous_week}_{previous_day}")
 	builder.button(text="▶️", callback_data=f"schedule_{next_week}_{next_day}")
+	builder.button(text="⏪", callback_data=f"schedule_{week - 1 if week > 0 else 3}_{day}")
+	builder.button(text="⏩", callback_data=f"schedule_{week + 1 if week < 3 else 0}_{day}")
+	builder.button(text="Завантижити розклад на тиждень", callback_data=f"file_{week}")
 	builder.adjust(2)
 
 	if action == Action.EDIT:
@@ -95,6 +98,7 @@ async def answer_with_schedule(
 
 @router.message(F.text == "📅 Розклад")
 @flags.show_main_menu
+@flags.chat_action("typing")
 async def schedule_command_handler(message: Message, user: Type, bot: Bot) -> None:
 	await answer_with_schedule(bot, message, user)
 
@@ -105,3 +109,15 @@ async def schedule_callback_handler(callback: CallbackQuery, user: Type, bot: Bo
 	week = int(data[1])
 	day = int(data[2])
 	await answer_with_schedule(bot, callback.message, user, Action.EDIT, ScheduleTime.NEXT_DAY, week, day)
+
+
+@router.callback_query(F.data.startswith("file_"))
+async def download_callback_handler(callback: CallbackQuery, user: Type, bot: Bot) -> None:
+	data = callback.data.split("_")
+	week = int(data[1])
+
+	await bot.send_photo(
+		callback.message.chat.id,
+		URLInputFile("https://cataas.com/cat"),
+		caption=f"Тут повинен бути файл з розкладом на {week+1}-тиждень, але цей функціонал ще в розробці"
+	)

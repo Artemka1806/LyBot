@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 import redis
 import requests
 
-from middlewares import auth, extra_data, menu
+from middlewares import auth, extra_data, menu, chat_action
 from handlers import login, attendance, schedule
 from models.user import User
 from keyboards import main_menu
@@ -33,6 +33,7 @@ dp = Dispatcher()
 dp.update.outer_middleware(auth.AuthMiddleware())
 dp.update.outer_middleware(extra_data.ExtraDataMiddleware())
 dp.message.middleware(menu.MenuMiddleware())
+dp.message.middleware(chat_action.ChatActionMiddleware())
 dp.include_routers(login.router, attendance.router, schedule.router)
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
