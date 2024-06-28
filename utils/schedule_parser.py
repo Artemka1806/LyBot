@@ -1,7 +1,5 @@
 from config import GROUPS
 
-DAYS_OF_WEEK = ["понеділок", "вівторок", "середа", "четвер", "п'ятниця", "субота", "неділя"]
-
 
 class Lesson():
 	def __init__(self, data: list):
