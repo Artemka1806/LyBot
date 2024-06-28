@@ -5,6 +5,7 @@ GROUPS = [
 
 RESERVED_ACCOUNTS = {
 	"test@example.com": 1703,
+	"test2@example.com": 1806
 }
 
 MAIN_MENU_BUTTONS = [
