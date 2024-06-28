@@ -12,7 +12,12 @@ class AuthMiddleware(BaseMiddleware):
 		event: TelegramObject,
 		data: Dict[str, Any],
 	) -> Any:
-		users = User.objects(tg_id=event.message.from_user.id)
+		tg_id = 0
+		if event.callback_query:
+			tg_id = event.callback_query.from_user.id
+		else:
+			tg_id = event.message.from_user.id
+		users = User.objects(tg_id=tg_id)
 		if users:
 			data["user"] = users.first()
 		else:
