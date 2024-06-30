@@ -36,6 +36,7 @@ dp.update.outer_middleware(auth.AuthMiddleware())
 dp.update.outer_middleware(extra_data.ExtraDataMiddleware())
 dp.message.middleware(menu.MenuMiddleware())
 dp.include_routers(login.router, attendance.router, schedule.router)
+dp.message.filter(F.chat.type.is_("private"))
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
