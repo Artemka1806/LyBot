@@ -11,7 +11,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command, MagicData
 from aiogram.types import Message
-# from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from mongoengine import connect
 from dotenv import load_dotenv
 import redis
@@ -88,14 +88,14 @@ def save_api_data():
 
 
 async def main():
-	# scheduler = BackgroundScheduler()
-	# scheduler.configure(timezone="Europe/Kyiv")
-	# scheduler.add_job(save_api_data, 'interval', minutes=5)
-	# scheduler.start()
+	scheduler = BackgroundScheduler()
+	scheduler.configure(timezone="Europe/Kyiv")
+	scheduler.add_job(save_api_data, 'interval', minutes=5)
+	scheduler.start()
 	try:
 		await dp.start_polling(bot)
 	finally:
-		# scheduler.shutdown()
+		scheduler.shutdown()
 		await bot.session.close()
 
 
