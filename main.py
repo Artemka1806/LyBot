@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 import redis
 import requests
 
-from middlewares import auth, extra_data, menu, chat_action
+from middlewares import auth, extra_data, menu, typing_action
 from handlers import login, attendance, schedule
 from models.user import User
 from keyboards import main_menu
@@ -30,10 +30,10 @@ REDIS_URL = getenv("REDIS_URL")
 API_URL = getenv("API_URL")
 
 dp = Dispatcher()
+dp.update.outer_middleware(typing_action.TypingActionMiddleware())
 dp.update.outer_middleware(auth.AuthMiddleware())
 dp.update.outer_middleware(extra_data.ExtraDataMiddleware())
 dp.message.middleware(menu.MenuMiddleware())
-dp.message.middleware(chat_action.ChatActionMiddleware())
 dp.include_routers(login.router, attendance.router, schedule.router)
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))

@@ -7,7 +7,7 @@ from typing import Type
 from aiogram import Bot, Router, F, flags, html
 from aiogram.types import Message, URLInputFile, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.filters import MagicData
+from aiogram.filters import MagicData, Command
 
 import redis
 
@@ -97,9 +97,14 @@ async def answer_with_schedule(
 
 @router.message(F.text == "📅 Розклад")
 @flags.show_main_menu
-@flags.chat_action("typing")
 async def schedule_command_handler(message: Message, user: Type, bot: Bot) -> None:
 	await answer_with_schedule(bot, message, user)
+
+
+@router.message(Command("schedule_t"))
+@flags.show_main_menu
+async def schedule_t_command_handler(message: Message, user: Type, bot: Bot) -> None:
+	await answer_with_schedule(bot, message, user, day=4)
 
 
 @router.callback_query(F.data.startswith("schedule_"))
