@@ -85,7 +85,7 @@ async def answer_with_schedule(
 	builder.button(text="▶️", callback_data=f"schedule_{next_week}_{next_day}")
 	builder.button(text="⏪", callback_data=f"schedule_{week - 1 if week > 0 else 3}_{day}")
 	builder.button(text="⏩", callback_data=f"schedule_{week + 1 if week < 3 else 0}_{day}")
-	builder.button(text="Завантижити розклад на тиждень", callback_data=f"file_{week}")
+	builder.button(text="Розклад на тиждень", callback_data=f"week_{week}_{day}")
 	builder.adjust(2)
 
 	if action == Action.EDIT:
@@ -93,6 +93,8 @@ async def answer_with_schedule(
 		return
 	else:
 		await message.answer(result, reply_markup=builder.as_markup())
+
+	return
 
 
 @router.message(F.text == "📅 Розклад")
@@ -115,13 +117,37 @@ async def schedule_callback_handler(callback: CallbackQuery, user: Type, bot: Bo
 	await answer_with_schedule(bot, callback.message, user, Action.EDIT, ScheduleTime.NEXT_DAY, week, day)
 
 
+@router.callback_query(F.data.startswith("week_"))
+async def week_schedule_callback_handler(callback: CallbackQuery, user: Type, bot: Bot) -> None:
+	data = callback.data.split("_")
+	week = int(data[1])
+	day = int(data[2])
+
+	builder = InlineKeyboardBuilder()
+	builder.button(text="Так", callback_data=f"file_{week}")
+	builder.button(text="Ні", callback_data=f"schedule_{week}_{day}")
+	builder.adjust(1)
+
+	await bot.edit_message_text(
+		f"Ви збираєтесь завантижити файл з розкладом на {week+1}-тиждень, продовжити?",
+		chat_id=callback.message.chat.id,
+		message_id=callback.message.message_id,
+		reply_markup=builder.as_markup()
+	)
+
+	return
+
+
 @router.callback_query(F.data.startswith("file_"))
 async def download_callback_handler(callback: CallbackQuery, user: Type, bot: Bot) -> None:
 	data = callback.data.split("_")
 	week = int(data[1])
+
+	await callback.answer("⌛ Секунду...")
 
 	await bot.send_photo(
 		callback.message.chat.id,
 		URLInputFile("https://cataas.com/cat"),
 		caption=f"Тут повинен бути файл з розкладом на {week+1}-тиждень, але цей функціонал ще в розробці"
 	)
+	return

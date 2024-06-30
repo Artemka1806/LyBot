@@ -11,13 +11,13 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command, MagicData
 from aiogram.types import Message
-from apscheduler.schedulers.background import BackgroundScheduler
+# from apscheduler.schedulers.background import BackgroundScheduler
 from mongoengine import connect
 from dotenv import load_dotenv
 import redis
 import requests
 
-from middlewares import auth, extra_data, menu, typing_action
+from middlewares import auth, extra_data, menu, typing_action, error_logging
 from handlers import login, attendance, schedule
 from models.user import User
 from keyboards import main_menu
@@ -30,6 +30,7 @@ REDIS_URL = getenv("REDIS_URL")
 API_URL = getenv("API_URL")
 
 dp = Dispatcher()
+dp.update.outer_middleware(error_logging.ErrorLoggingMiddleware())
 dp.update.outer_middleware(typing_action.TypingActionMiddleware())
 dp.update.outer_middleware(auth.AuthMiddleware())
 dp.update.outer_middleware(extra_data.ExtraDataMiddleware())
@@ -71,6 +72,12 @@ I wanna share it with you
 I feel like a millionaire""")
 
 
+@dp.message(Command("error"))
+@flags.show_main_menu
+async def error_command_handler(message: Message) -> None:
+	raise Exception("Love Of My Life\nhttps://youtu.be/sUJkCXE4sAA")
+
+
 def save_api_data():
 	data = requests.get(API_URL + "/api/schedule").json()
 	r.set("schedule", json.dumps(data[0]["Schedule"]))
@@ -81,14 +88,14 @@ def save_api_data():
 
 
 async def main():
-	scheduler = BackgroundScheduler()
-	scheduler.configure(timezone="Europe/Kyiv")
-	scheduler.add_job(save_api_data, 'interval', minutes=5)
-	scheduler.start()
+	# scheduler = BackgroundScheduler()
+	# scheduler.configure(timezone="Europe/Kyiv")
+	# scheduler.add_job(save_api_data, 'interval', minutes=5)
+	# scheduler.start()
 	try:
 		await dp.start_polling(bot)
 	finally:
-		scheduler.shutdown()
+		# scheduler.shutdown()
 		await bot.session.close()
 
 

@@ -14,6 +14,7 @@ class TypingActionMiddleware(BaseMiddleware):
 	) -> Any:
 		if event.callback_query:
 			return await handler(event, data)
+
 		async with ChatActionSender(
 			action="typing",
 			chat_id=event.message.chat.id,
