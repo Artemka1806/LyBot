@@ -112,4 +112,5 @@ async def clearstate_command_handler(message: Message, state: FSMContext) -> Non
 
 @router.message(StateFilter(None))
 async def login_required(message: Message) -> None:
-    await message.answer("Будь ласка, увійдіть за допомогою /login")
+    if not message.from_user.is_bot:
+        await message.answer("Будь ласка, увійдіть за допомогою /login")

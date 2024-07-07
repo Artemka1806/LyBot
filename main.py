@@ -19,7 +19,7 @@ import redis
 import requests
 
 from middlewares import auth, extra_data, menu, typing_action, error_logging
-from handlers import login, attendance, schedule
+from handlers import login, attendance, schedule, donation
 from models.user import User
 from keyboards import main_menu
 
@@ -41,7 +41,7 @@ dp.update.outer_middleware(typing_action.TypingActionMiddleware())
 dp.update.outer_middleware(auth.AuthMiddleware())
 dp.update.outer_middleware(extra_data.ExtraDataMiddleware())
 dp.message.middleware(menu.MenuMiddleware())
-dp.include_routers(login.router, attendance.router, schedule.router)
+dp.include_routers(login.router, attendance.router, schedule.router, donation.router)
 dp.message.filter(F.chat.type == "private")
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
