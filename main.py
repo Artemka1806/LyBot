@@ -11,6 +11,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command, MagicData
 from aiogram.types import Message
+from aiogram.fsm.storage.redis import RedisStorage
 from apscheduler.schedulers.background import BackgroundScheduler
 from mongoengine import connect
 from dotenv import load_dotenv
@@ -29,7 +30,12 @@ MONGO_URI = getenv("MONGO_URI")
 REDIS_URL = getenv("REDIS_URL")
 API_URL = getenv("API_URL")
 
-dp = Dispatcher()
+connect(host=MONGO_URI)
+
+r = redis.Redis.from_url(url=REDIS_URL)
+
+storage = RedisStorage.from_url(REDIS_URL)
+dp = Dispatcher(storage=storage)
 dp.update.outer_middleware(error_logging.ErrorLoggingMiddleware())
 dp.update.outer_middleware(typing_action.TypingActionMiddleware())
 dp.update.outer_middleware(auth.AuthMiddleware())
@@ -39,10 +45,6 @@ dp.include_routers(login.router, attendance.router, schedule.router)
 dp.message.filter(F.chat.type == "private")
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-
-connect(host=MONGO_URI)
-
-r = redis.Redis.from_url(url=REDIS_URL)
 
 
 @dp.message(CommandStart(), MagicData(F.user))
