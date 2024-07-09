@@ -19,7 +19,7 @@ import redis
 import requests
 
 from middlewares import *
-from handlers import login, attendance, schedule, donation
+from handlers import ROUTERS
 from models.user import User
 from keyboards import main_menu
 
@@ -40,7 +40,7 @@ dp = Dispatcher(storage=storage)
 for middleware in OUTER_MIDDLEWARES:
 	dp.update.outer_middleware(middleware())
 dp.message.middleware(MenuMiddleware())
-dp.include_routers(login.router, attendance.router, schedule.router, donation.router)
+dp.include_routers(*ROUTERS)
 
 dp.message.filter(F.chat.type == "private")
 
