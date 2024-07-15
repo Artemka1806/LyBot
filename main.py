@@ -8,8 +8,6 @@ from typing import Type
 
 from aiogram import Bot, Dispatcher, html, F, flags
 from aiogram.client.default import DefaultBotProperties
-# from aiogram.client.session.aiohttp import AiohttpSession
-from aiogram.client.telegram import TEST
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command, MagicData
 from aiogram.types import Message
@@ -105,7 +103,7 @@ async def main():
 		scheduler.add_job(save_api_data, 'interval', minutes=5)
 		scheduler.start()
 	try:
-		# await bot.delete_webhook(drop_pending_updates=True)
+		await bot.delete_webhook(drop_pending_updates=True)
 		await dp.start_polling(bot)
 	finally:
 		if getenv("DISABLE_SCHEDULER") is None:
