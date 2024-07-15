@@ -8,6 +8,8 @@ from typing import Type
 
 from aiogram import Bot, Dispatcher, html, F, flags
 from aiogram.client.default import DefaultBotProperties
+# from aiogram.client.session.aiohttp import AiohttpSession
+from aiogram.client.telegram import TEST
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command, MagicData
 from aiogram.types import Message
@@ -25,6 +27,8 @@ from keyboards import main_menu
 load_dotenv()
 
 TOKEN = getenv("BOT_TOKEN")
+TEST_TOKEN = getenv("TEST_BOT_TOKEN")
+USE_TEST_SERVER = getenv("USE_TEST_SERVER")
 MONGO_URI = getenv("MONGO_URI")
 REDIS_URL = getenv("REDIS_URL")
 API_URL = getenv("API_URL")
@@ -43,7 +47,11 @@ dp.include_routers(*ROUTERS)
 
 dp.message.filter(F.chat.type == "private")
 
-bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+
+main_bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+test_bot = Bot(token=TEST_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+
+bot = test_bot if USE_TEST_SERVER == "1" else main_bot
 
 
 @dp.message(CommandStart(), MagicData(F.user))
@@ -97,6 +105,7 @@ async def main():
 		scheduler.add_job(save_api_data, 'interval', minutes=5)
 		scheduler.start()
 	try:
+		# await bot.delete_webhook(drop_pending_updates=True)
 		await dp.start_polling(bot)
 	finally:
 		if getenv("DISABLE_SCHEDULER") is None:

@@ -22,4 +22,6 @@ class ErrorLoggingMiddleware(BaseMiddleware):
 		try:
 			return await handler(event, data)
 		except Exception:
-			await bot.send_message(ERROR_LOG_CHAT_ID, traceback.format_exc())
+			data = traceback.format_exc()
+			print(data)
+			await bot.send_message(ERROR_LOG_CHAT_ID, data)
