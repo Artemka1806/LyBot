@@ -8,6 +8,7 @@ from aiogram import Bot, Router, F, flags, html
 from aiogram.types import Message, URLInputFile, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import MagicData, Command
+from aiogram.filters.callback_data import CallbackData
 
 import redis
 
@@ -30,6 +31,11 @@ class Action(Enum):
 class ScheduleTime(Enum):
 	NOW = 0
 	NEXT_DAY = 1
+
+
+class ScheduleCallback(CallbackData, prefix="schedule"):
+	week: int
+	day: int
 
 
 async def answer_with_schedule(
@@ -82,10 +88,10 @@ async def answer_with_schedule(
 			result += f"{p_result}\n"
 
 		builder = InlineKeyboardBuilder()
-		builder.button(text="◀️", callback_data=f"schedule_{previous_week}_{previous_day}")
-		builder.button(text="▶️", callback_data=f"schedule_{next_week}_{next_day}")
-		builder.button(text="⏪", callback_data=f"schedule_{week - 1 if week > 0 else 3}_{day}")
-		builder.button(text="⏩", callback_data=f"schedule_{week + 1 if week < 3 else 0}_{day}")
+		builder.button(text="◀️", callback_data=ScheduleCallback(week=previous_week, day=previous_day))
+		builder.button(text="▶️", callback_data=ScheduleCallback(week=next_week, day=next_day))
+		builder.button(text="⏪", callback_data=ScheduleCallback(week=week - 1 if week > 0 else 3, day=day))
+		builder.button(text="⏩", callback_data=ScheduleCallback(week=week + 1 if week < 3 else 0, day=day))
 		builder.button(text="Розклад на тиждень", callback_data=f"week_{week}_{day}")
 		builder.adjust(2)
 
@@ -103,7 +109,7 @@ async def answer_with_schedule(
 
 @router.message(F.text == "📅 Розклад")
 @flags.show_main_menu
-async def schedule_command_handler(message: Message, user: Type, bot: Bot) -> None:
+async def schedule_handler(message: Message, user: Type, bot: Bot) -> None:
 	await answer_with_schedule(bot, message, user)
 
 
@@ -113,12 +119,17 @@ async def schedule_t_command_handler(message: Message, user: Type, bot: Bot) -> 
 	await answer_with_schedule(bot, message, user, day=4)
 
 
-@router.callback_query(F.data.startswith("schedule_"))
-async def schedule_callback_handler(callback: CallbackQuery, user: Type, bot: Bot) -> None:
-	data = callback.data.split("_")
-	week = int(data[1])
-	day = int(data[2])
-	await answer_with_schedule(bot, callback.message, user, Action.EDIT, ScheduleTime.NEXT_DAY, week, day)
+@router.callback_query(ScheduleCallback.filter())
+async def schedule_callback_handler(callback: CallbackQuery, callback_data: ScheduleCallback, user: Type, bot: Bot) -> None:
+	await answer_with_schedule(
+		bot,
+		callback.message,
+		user,
+		Action.EDIT,
+		ScheduleTime.NEXT_DAY,
+		callback_data.week,
+		callback_data.day
+	)
 
 
 @router.callback_query(F.data.startswith("week_"))
@@ -129,7 +140,7 @@ async def week_schedule_callback_handler(callback: CallbackQuery, user: Type, bo
 
 	builder = InlineKeyboardBuilder()
 	builder.button(text="Так", callback_data=f"file_{week}")
-	builder.button(text="Ні", callback_data=f"schedule_{week}_{day}")
+	builder.button(text="Ні", callback_data=ScheduleCallback(week=week, day=day))
 	builder.adjust(1)
 
 	await bot.edit_message_text(
