@@ -1,5 +1,7 @@
-aiogram==3.8.0
+aiogram==3.10.0
+aiogram_album==0.0.4b0
 APScheduler==3.10.4
+cachetools==5.4.0
 mongoengine==0.28.2
 python-dotenv==1.0.1
 redis==5.0.7

@@ -12,6 +12,7 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command, MagicData
 from aiogram.types import Message
 from aiogram.fsm.storage.redis import RedisStorage
+from aiogram_album.count_check_middleware import CountCheckAlbumMiddleware
 from mongoengine import connect
 from dotenv import load_dotenv
 import redis
@@ -40,6 +41,7 @@ dp = Dispatcher(storage=storage)
 
 for middleware in OUTER_MIDDLEWARES:
 	dp.update.outer_middleware(middleware())
+CountCheckAlbumMiddleware(router=dp, latency=0.3)
 dp.message.middleware(MenuMiddleware())
 dp.include_routers(*ROUTERS)
 
