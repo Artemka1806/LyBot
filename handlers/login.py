@@ -21,6 +21,7 @@ SENDER_PASSWORD = getenv("SENDER_PASSWORD")
 
 
 router = Router()
+router.message.filter(F.chat.type == "private")
 router.message.filter(MagicData(~F.user))
 
 

@@ -10,6 +10,7 @@ from keyboards import attendance_status_select as ass
 from keyboards import main_menu
 
 router = Router()
+router.message.filter(F.chat.type == "private")
 router.message.filter(MagicData(F.user))
 
 

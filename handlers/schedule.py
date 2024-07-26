@@ -20,6 +20,7 @@ REDIS_URL = getenv("REDIS_URL")
 r = redis.Redis.from_url(url=REDIS_URL)
 
 router = Router()
+router.message.filter(F.chat.type == "private")
 router.message.filter(MagicData(F.user))
 
 

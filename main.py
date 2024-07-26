@@ -45,8 +45,6 @@ CountCheckAlbumMiddleware(router=dp, latency=0.3)
 dp.message.middleware(MenuMiddleware())
 dp.include_routers(*ROUTERS)
 
-dp.message.filter(F.chat.type == "private")
-
 
 main_bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 test_bot = Bot(token=TEST_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))

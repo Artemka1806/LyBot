@@ -14,6 +14,7 @@ from keyboards import admin_menu, cancel
 
 
 router = Router()
+router.message.filter(F.chat.type == "private")
 router.message.filter(MagicData(F.user.role.MANAGER | F.user.role.ADMIN))
 
 
@@ -42,9 +43,10 @@ async def send_to_groups_handler(message: Message, state: FSMContext) -> None:
 
 @router.message(F.media_group_id, AdminSendMessageAction.entering_message)
 async def entered_album_handler(message: AlbumMessage, state: FSMContext) -> None:
-	await state.update_data(messages=message.message_ids)
-	await state.set_state(AdminSendMessageAction.choosing_recipient)
-	await message.answer("Тепер введіть ID чату")
+	# await state.update_data(messages=message.message_ids)
+	# await state.set_state(AdminSendMessageAction.choosing_recipient)
+	# await message.answer("Тепер введіть ID чату")
+	await message.answer("Альбоми (кілька фотографій в одному повідомлення) наразі не підтримуються")
 
 
 @router.message(AdminSendMessageAction.entering_message)
@@ -59,6 +61,7 @@ async def choosed_recipient_handler(message: Message, state: FSMContext, bot: Bo
 	data = await state.get_data()
 	message_ids = data["messages"]
 	message_ids.sort()
+	print("id:", message.text)
 	await bot.copy_messages(chat_id=message.text, from_chat_id=message.chat.id, message_ids=message_ids)
 	await message.answer("Успішно!", reply_markup=admin_menu.keyboard)
 	await state.clear()

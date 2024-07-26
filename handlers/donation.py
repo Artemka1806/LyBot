@@ -8,6 +8,7 @@ from aiogram.types import Message, PreCheckoutQuery, LabeledPrice
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 router = Router()
+router.message.filter(F.chat.type == "private")
 router.message.filter(MagicData(F.user))
 
 

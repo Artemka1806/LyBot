@@ -10,6 +10,7 @@ from mongoengine.errors import ValidationError
 from keyboards import settings_menu, cancel, inline_yes_no
 
 router = Router()
+router.message.filter(F.chat.type == "private")
 router.message.filter(MagicData(F.user))
 
 
