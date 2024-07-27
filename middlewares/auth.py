@@ -21,10 +21,7 @@ class AuthMiddleware(BaseMiddleware):
 			tg_id = event.pre_checkout_query.from_user.id
 		else:
 			return await handler(event, data)
-		users = User.objects(tg_id=tg_id)
-		if users:
-			data["user"] = users.first()
-		else:
-			data["user"] = None
+
+		data["user"] = await User.find_one({"tg_id": tg_id})
 
 		return await handler(event, data)

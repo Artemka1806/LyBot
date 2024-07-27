@@ -13,14 +13,14 @@ from aiogram.filters import CommandStart, Command, MagicData
 from aiogram.types import Message
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram_album.count_check_middleware import CountCheckAlbumMiddleware
-from mongoengine import connect
 from dotenv import load_dotenv
+from motor.motor_asyncio import AsyncIOMotorClient
 import redis
 import requests
 
 from middlewares import *
 from handlers import ROUTERS
-from models.user import User
+from models.common import instance
 from keyboards import main_menu
 
 load_dotenv()
@@ -32,7 +32,9 @@ MONGO_URI = getenv("MONGO_URI")
 REDIS_URL = getenv("REDIS_URL")
 API_URL = getenv("API_URL")
 
-connect(host=MONGO_URI)
+client = AsyncIOMotorClient(MONGO_URI)
+db = client.data
+instance.set_db(db)
 
 r = redis.Redis.from_url(url=REDIS_URL)
 
@@ -55,16 +57,6 @@ bot = test_bot if USE_TEST_SERVER == "1" else main_bot
 @dp.message(CommandStart(), MagicData(F.user))
 async def start_command_handler(message: Message, user: Type) -> None:
 	await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!", reply_markup=main_menu.keyboard(user))
-
-
-@dp.message(Command("deleteme"))
-async def deleteme_command_handler(message: Message) -> None:
-	users = User.objects(tg_id=message.from_user.id)
-	if users:
-		users.first().delete()
-		await message.answer("Deleted!")
-	else:
-		await message.answer("Already deleted!")
 
 
 @dp.message(Command("waltz"))

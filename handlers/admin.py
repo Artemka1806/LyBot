@@ -15,7 +15,7 @@ from keyboards import admin_menu, cancel
 
 router = Router()
 router.message.filter(F.chat.type == "private")
-router.message.filter(MagicData(F.user.role.MANAGER | F.user.role.ADMIN))
+router.message.filter(MagicData(F.user.role > 0))
 
 
 class AdminSendMessageAction(StatesGroup):

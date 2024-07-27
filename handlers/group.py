@@ -15,17 +15,16 @@ migration_cache = TTLCache(maxsize=inf, ttl=10.0)
 
 @router.message(F.migrate_from_chat_id)
 async def group_to_supegroup_migration(message: Message, bot: Bot):
-	groups = Group.objects(tg_id=message.chat.id)
-	if groups:
-		group = groups.first()
-		group["tg_id"] = message.chat.id
-		group.save()
+	group = await Group.find_one({"tg_id": message.migrate_from_chat_id})
+	if group:
+		group.tg_id = message.chat.id
 	else:
 		group = Group(
 			tg_id=message.chat.id,
 			name=message.chat.title,
 		)
-		group.save()
+
+	await group.commit()
 
 	await message.answer(
 		"Група щойно мігрувала в супергрупу. Але, не переживайте, я вже обробив цю \"велику\" подію. Все під контролем 😎 "
@@ -40,13 +39,13 @@ async def group_to_supegroup_migration(message: Message, bot: Bot):
 async def bot_added_to_group(event: ChatMemberUpdated, bot: Bot):
 	await sleep(1.0)
 	if event.chat.id not in migration_cache.keys():
-		groups = Group.objects(tg_id=event.chat.id)
-		if not groups:
+		group = await Group.find_one({"tg_id": event.chat.id})
+		if not group:
 			group = Group(
 				tg_id=event.chat.id,
 				name=event.chat.title,
 			)
-			group.save()
+			await group.commit()
 
 		await event.answer("A placeholder. I will replace it later.")
 
@@ -56,6 +55,6 @@ async def bot_added_to_group(event: ChatMemberUpdated, bot: Bot):
 	F.chat.type.in_({"group", "supergroup"})
 )
 async def bot_left_group(event: ChatMemberUpdated, bot: Bot):
-	groups = Group.objects(tg_id=event.chat.id)
-	if groups:
-		groups.first().delete()
+	group = await Group.find_one({"tg_id": event.chat.id})
+	if group:
+		await group.delete()

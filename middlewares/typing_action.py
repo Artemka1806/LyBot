@@ -20,5 +20,4 @@ class TypingActionMiddleware(BaseMiddleware):
 					bot=data["bot"]
 				):
 					return await handler(event, data)
-			return await handler(event, data)
 		return await handler(event, data)

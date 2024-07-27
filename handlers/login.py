@@ -81,7 +81,6 @@ async def group_entered(message: Message, state: FSMContext, config: Type) -> No
         return
     await state.update_data(group=message.text)
     user_data = await state.get_data()
-    await state.clear()
 
     user = User(
         tg_id=message.from_user.id,
@@ -95,7 +94,8 @@ async def group_entered(message: Message, state: FSMContext, config: Type) -> No
         await message.answer("Було втрачено певну частину введених вами даних. Пройдіть процес авторизації заново за допомогою /login")
         return
 
-    user.save()
+    await user.commit()
+    await state.clear()
 
     await message.answer("Успішно! Використовуйте головне меню:", reply_markup=main_menu.keyboard(user))
 

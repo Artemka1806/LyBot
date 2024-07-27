@@ -10,7 +10,7 @@ def keyboard(user):
 	for button in config.MAIN_MENU_BUTTONS:
 		builder.add(KeyboardButton(text=button))
 
-	if user.role.MANAGER or user.role.ADMIN:
+	if user.role > 0:
 		builder.add(KeyboardButton(text="😎 Адміністрування"))
 
 	builder.adjust(config.MAIN_MENU_SIZE)

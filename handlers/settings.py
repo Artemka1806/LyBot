@@ -5,7 +5,6 @@ from aiogram.filters import MagicData
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
-from mongoengine.errors import ValidationError
 
 from keyboards import settings_menu, cancel, inline_yes_no
 
@@ -37,7 +36,7 @@ async def logout_handler(message: Message) -> None:
 
 @router.callback_query(F.data == "logout:yes")
 async def logout(callback: CallbackQuery, user: Type, bot: Bot):
-	user.delete()
+	await user.delete()
 	await callback.message.delete()
 	await callback.answer("Успішно!")
 	await callback.message.answer("Будь ласка, увійдіть за допомогою /login")
@@ -50,16 +49,9 @@ async def logout_cancel(callback: CallbackQuery, bot: Bot):
 	await callback.answer("OK", show_alert=True)
 
 
-@router.message(F.text == "❌ Скасувати", UserSettings.selecting_now)
+@router.message(F.text == "❌ Скасувати")
 @flags.show_main_menu
-async def cancel1_handler(message: Message, state: FSMContext, user: Type) -> None:
-	await state.clear()
-	await message.answer("OK")
-
-
-@router.message(F.text == "❌ Скасувати", UserSettings.changing_now)
-@flags.show_main_menu
-async def cancel2_handler(message: Message, state: FSMContext, user: Type) -> None:
+async def cancel_handler(message: Message, state: FSMContext) -> None:
 	await state.clear()
 	await message.answer("OK")
 
@@ -97,9 +89,9 @@ async def setting_changed(message: Message, state: FSMContext, user: Type) -> No
 		elif selected_setting == 1:
 			user.group = message.text
 
-		user.save()
+		user.commit()
 
 		await message.answer(f"Успішно змінено налаштування!")
 		await state.clear()
-	except ValidationError:
+	except Exception:
 		await message.answer(f"Помилка валідації!")

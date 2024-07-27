@@ -1,21 +1,17 @@
 import datetime
-from enum import Enum
 
-from mongoengine import *
+from umongo import Document, fields
 
-
-class Role(Enum):
-	USER = 0
-	MANAGER = 1
-	ADMIN = 2
+from .common import instance
 
 
+@instance.register
 class User(Document):
-	tg_id = DecimalField(unique=True, required=True)
-	name = StringField(max_length=64, required=True)
-	username = StringField(max_length=32)
-	email = EmailField(required=True)
-	group = StringField(max_length=4, required=True)
-	role = EnumField(Role, default=Role.USER)
-	status = DecimalField(min_value=0, max_value=3, default=3)
-	created_at = DateTimeField(default=datetime.datetime.utcnow)
+	tg_id = fields.IntegerField(unique=True, required=True)
+	name = fields.StringField(max_length=64, required=True)
+	username = fields.StringField(max_length=32)
+	email = fields.EmailField(required=True)
+	group = fields.StringField(max_length=4, required=True)
+	role = fields.IntField(default=0)
+	status = fields.IntegerField(min_value=0, max_value=3, default=3)
+	created_at = fields.DateTimeField(default=datetime.datetime.utcnow)
