@@ -89,7 +89,7 @@ async def setting_changed(message: Message, state: FSMContext, user: Type) -> No
 		elif selected_setting == 1:
 			user.group = message.text
 
-		user.commit()
+		await user.commit()
 
 		await message.answer(f"Успішно змінено налаштування!")
 		await state.clear()
