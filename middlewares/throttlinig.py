@@ -21,9 +21,9 @@ class ThrottlingMiddleware(BaseMiddleware):
 
 			if check_user:
 				if int(check_user.decode()) == 1:
-					await self.storage.redis.set(name=user, value=0, ex=3)
+					await self.storage.redis.set(name=user, value=0, ex=1)
 					print("SPAM, IDK")
 				return
-			await self.storage.redis.set(name=user, value=1, ex=3)
+			await self.storage.redis.set(name=user, value=1, ex=1)
 
 		return await handler(event, data)
