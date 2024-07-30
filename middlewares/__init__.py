@@ -6,5 +6,5 @@ from .typing_action import TypingActionMiddleware
 
 OUTER_MIDDLEWARES = (
 	AuthMiddleware, ErrorLoggingMiddleware,
-	ExtraDataMiddleware, TypingActionMiddleware
+	ExtraDataMiddleware
 )

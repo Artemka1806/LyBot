@@ -12,6 +12,8 @@ class AuthMiddleware(BaseMiddleware):
 		event: TelegramObject,
 		data: Dict[str, Any],
 	) -> Any:
+		if event.callback_query and event.callback_query.data.startswith("nodb_"):
+			return await handler(event, data)
 		tg_id = 0
 		if event.callback_query:
 			tg_id = event.callback_query.from_user.id

@@ -38,7 +38,7 @@ async def status_selected(message: Message, state: FSMContext, user: Type) -> No
 		return
 
 	user.status = ass.ANSWER_OPTIONS.index(message.text)
-	user.save()
+	await user.commit()
 
 	await state.clear()
 	await message.answer(f'Успішно оновлено статус на "{message.text}"', reply_markup=main_menu.keyboard(user))

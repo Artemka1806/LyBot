@@ -12,12 +12,11 @@ class TypingActionMiddleware(BaseMiddleware):
 		event: TelegramObject,
 		data: Dict[str, Any],
 	) -> Any:
-		if event.message and not event.callback_query:
-			if event.message.chat.type == "private":
-				async with ChatActionSender(
-					action="typing",
-					chat_id=event.message.chat.id,
-					bot=data["bot"]
-				):
-					return await handler(event, data)
+		if event.chat.type == "private":
+			async with ChatActionSender(
+				action="typing",
+				chat_id=event.chat.id,
+				bot=data["bot"]
+			):
+				return await handler(event, data)
 		return await handler(event, data)

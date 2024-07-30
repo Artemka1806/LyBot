@@ -34,7 +34,8 @@ class ScheduleTime(Enum):
 	NEXT_DAY = 1
 
 
-class ScheduleCallback(CallbackData, prefix="schedule"):
+class ScheduleCallback(CallbackData, prefix="nodb_schedule"):
+	group: str
 	week: int
 	day: int
 
@@ -42,11 +43,11 @@ class ScheduleCallback(CallbackData, prefix="schedule"):
 async def answer_with_schedule(
 	bot: Bot,
 	message: Message,
-	user: Type,
+	group: str,
 	action: Action = Action.ANSWER,
 	schedule_time: ScheduleTime = ScheduleTime.NOW,
 	week: int = get_week_number(datetime.strptime(json.loads(r.get("time_managment"))["FirstWeek"], '%d.%m.%Y')),
-	day: int = datetime.weekday(datetime.now())
+	day: int = datetime.weekday(datetime.now()),
 ):
 	try:
 		next_day = day + 1
@@ -73,7 +74,7 @@ async def answer_with_schedule(
 			else:
 				previous_week -= 1
 
-		schedule = Schedule(json.loads(r.get("schedule"))).get_schedule_data(user.group, week, day)
+		schedule = Schedule(json.loads(r.get("schedule"))).get_schedule_data(group, week, day)
 
 		EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
 		DAYS_OF_WEEK = ["Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця"]
@@ -87,12 +88,11 @@ async def answer_with_schedule(
 			for lesson in pair:
 				p_result += f'{html.bold(lesson)}\n' if lesson.name else ''
 			result += f"{p_result}\n"
-
 		builder = InlineKeyboardBuilder()
-		builder.button(text="◀️", callback_data=ScheduleCallback(week=previous_week, day=previous_day))
-		builder.button(text="▶️", callback_data=ScheduleCallback(week=next_week, day=next_day))
-		builder.button(text="⏪", callback_data=ScheduleCallback(week=week - 1 if week > 0 else 3, day=day))
-		builder.button(text="⏩", callback_data=ScheduleCallback(week=week + 1 if week < 3 else 0, day=day))
+		builder.button(text="◀️", callback_data=ScheduleCallback(group=group, week=previous_week, day=previous_day))
+		builder.button(text="▶️", callback_data=ScheduleCallback(group=group, week=next_week, day=next_day))
+		builder.button(text="⏪", callback_data=ScheduleCallback(group=group, week=week - 1 if week > 0 else 3, day=day))
+		builder.button(text="⏩", callback_data=ScheduleCallback(group=group, week=week + 1 if week < 3 else 0, day=day))
 		builder.button(text="Розклад на тиждень", callback_data=f"week_{week}_{day}")
 		builder.adjust(2)
 
@@ -111,21 +111,21 @@ async def answer_with_schedule(
 @router.message(F.text == "📅 Розклад")
 @flags.show_main_menu
 async def schedule_handler(message: Message, user: Type, bot: Bot) -> None:
-	await answer_with_schedule(bot, message, user)
+	await answer_with_schedule(bot, message, user.group)
 
 
 @router.message(Command("schedule_t"))
 @flags.show_main_menu
-async def schedule_t_command_handler(message: Message, user: Type, bot: Bot) -> None:
-	await answer_with_schedule(bot, message, user, day=4)
+async def schedule_t_command_handler(message: Message, bot: Bot, user: Type) -> None:
+	await answer_with_schedule(bot, message, user.group, day=4)
 
 
 @router.callback_query(ScheduleCallback.filter())
-async def schedule_callback_handler(callback: CallbackQuery, callback_data: ScheduleCallback, user: Type, bot: Bot) -> None:
+async def schedule_callback_handler(callback: CallbackQuery, callback_data: ScheduleCallback, bot: Bot) -> None:
 	await answer_with_schedule(
 		bot,
 		callback.message,
-		user,
+		callback_data.group,
 		Action.EDIT,
 		ScheduleTime.NEXT_DAY,
 		callback_data.week,
@@ -141,7 +141,7 @@ async def week_schedule_callback_handler(callback: CallbackQuery, user: Type, bo
 
 	builder = InlineKeyboardBuilder()
 	builder.button(text="Так", callback_data=f"file_{week}")
-	builder.button(text="Ні", callback_data=ScheduleCallback(week=week, day=day))
+	builder.button(text="Ні", callback_data=ScheduleCallback(group=user.group, week=week, day=day))
 	builder.adjust(1)
 
 	await bot.edit_message_text(
@@ -161,9 +161,8 @@ async def download_callback_handler(callback: CallbackQuery, user: Type, bot: Bo
 
 	await callback.answer("⌛ Секунду...")
 
-	await bot.send_photo(
+	await bot.send_message(
 		callback.message.chat.id,
-		URLInputFile("https://cataas.com/cat"),
-		caption=f"Тут повинен бути файл з розкладом на {week+1}-тиждень, але цей функціонал ще в розробці"
+		"нє"
 	)
 	return
