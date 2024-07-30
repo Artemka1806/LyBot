@@ -41,11 +41,10 @@ r = redis.Redis.from_url(url=REDIS_URL)
 
 storage = RedisStorage.from_url(REDIS_URL)
 dp = Dispatcher(storage=storage)
+dp.message.outer_middleware(TypingActionMiddleware())
 dp.message.outer_middleware(ThrottlingMiddleware(storage=storage))
-
 for middleware in OUTER_MIDDLEWARES:
 	dp.update.outer_middleware(middleware())
-dp.message.outer_middleware(TypingActionMiddleware())
 CountCheckAlbumMiddleware(router=dp, latency=0.3)
 dp.message.middleware(MenuMiddleware())
 dp.include_routers(*ROUTERS)
