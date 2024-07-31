@@ -2,7 +2,9 @@ from aiogram.types import KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 MENU_OPTIONS = [
-	"Надіслати групам"
+	"Додати в групу",
+	"Надіслати групам",
+	"Керування групами",
 ]
 
 builder = ReplyKeyboardBuilder()

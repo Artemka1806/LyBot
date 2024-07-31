@@ -25,12 +25,20 @@ class GroupSelectCallback(CallbackData, prefix="group_select"):
 	selected: bool
 
 
+class GroupManageCallback(CallbackData, prefix="group_manage"):
+	tg_id: int
+
+
+class GroupLeaveCallback(CallbackData, prefix="group_leave"):
+	tg_id: int
+
+
 class AdminSendMessageAction(StatesGroup):
 	entering_message = State()
 	choosing_recipient = State()
 
 
-@router.message(F.text == "😎 Адміністрування", )
+@router.message(F.text == "😎 Адміністрування")
 async def admin_handler(message: Message) -> None:
 	await message.answer("Виберіть дію:", reply_markup=admin_menu.keyboard)
 
@@ -40,6 +48,14 @@ async def admin_handler(message: Message) -> None:
 async def cancel_handler(message: Message, state: FSMContext) -> None:
 	await message.answer("ОК")
 	await state.clear()
+
+
+@router.message(F.text == "Додати в групу")
+async def add_to_group_handler(message: Message) -> None:
+	builder = InlineKeyboardBuilder()
+	builder.button(text="Поширити посилання", url="tg://msg_url?url=tg%3A%2F%2Fresolve%3Fdomain%3DZTULyBot%26startgroup%26admin%3Dpost_messages%2Bedit_messages%2Bdelete_messages%2Bban_users%2Binvite_users%2Bpin_messages%2Badd_admins%2Bother%2Bmanage_topics%2Bchange_info%2Brestrict_members%2Bpromote_members%2Bmanage_chat&text=Вітаю!\nДодайте, будь ласка, ліцейного бота в ваш чат групи")
+	builder.adjust(1)
+	await message.answer("Натисніть кнопку знизу щоб поширити посилання", reply_markup=builder.as_markup())
 
 
 @router.message(F.text == "Надіслати групам")
@@ -112,3 +128,29 @@ async def send_query_handler(callback: CallbackQuery, state: FSMContext, bot: Bo
 	await bot.send_message(callback.from_user.id, "Головне меню", reply_markup=main_menu.keyboard(user))
 	await state.clear()
 	await mass_send(callback.from_user.id, groups_to_send, callback.message.chat.id, data["messages"], bot)
+
+
+@router.message(F.text == "Керування групами")
+async def manage_groups_handler(message: Message) -> None:
+	group_cursor = Group.find()
+	builder = InlineKeyboardBuilder()
+	async for group in group_cursor:
+		builder.button(text=group.name, callback_data=GroupManageCallback(tg_id=group.tg_id))
+	builder.adjust(2)
+	await message.answer("ОК", reply_markup=builder.as_markup())
+
+
+@router.callback_query(GroupManageCallback.filter())
+async def group_to_manage_selected_handler(callback: CallbackQuery, callback_data: GroupManageCallback, bot: Bot) -> None:
+	data = await bot.get_chat(callback_data.tg_id)
+	msg_text = f"ID: {data.id}\nНазва: {data.title}\nТип: {data.type}\nПосилання: {data.invite_link}"
+	builder = InlineKeyboardBuilder()
+	builder.button(text="Покинути групу", callback_data=GroupLeaveCallback(tg_id=data.id))
+	await bot.send_message(callback.message.chat.id, msg_text, reply_markup=builder.as_markup())
+
+
+@router.callback_query(GroupLeaveCallback.filter())
+async def leave_group_handler(callback: CallbackQuery, callback_data: GroupLeaveCallback, bot: Bot) -> None:
+	await bot.leave_chat(callback_data.tg_id)
+	await bot.send_message(callback.message.chat.id, "OK")
+
