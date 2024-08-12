@@ -22,7 +22,6 @@ class ThrottlingMiddleware(BaseMiddleware):
 			if check_user:
 				if int(check_user.decode()) == 1:
 					await self.storage.redis.set(name=user, value=0, ex=1)
-					print("Lorem ipsum")
 				return
 			await self.storage.redis.set(name=user, value=1, ex=1)
 
