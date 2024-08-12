@@ -12,7 +12,6 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command, MagicData
 from aiogram.types import Message
 from aiogram.fsm.storage.redis import RedisStorage
-from aiogram_album.count_check_middleware import CountCheckAlbumMiddleware
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 import redis
@@ -45,7 +44,6 @@ dp.message.outer_middleware(ThrottlingMiddleware(storage=storage))
 dp.message.outer_middleware(TypingActionMiddleware())
 for middleware in OUTER_MIDDLEWARES:
 	dp.update.outer_middleware(middleware())
-CountCheckAlbumMiddleware(router=dp, latency=0.3)
 dp.message.middleware(MenuMiddleware())
 dp.include_routers(*ROUTERS)
 

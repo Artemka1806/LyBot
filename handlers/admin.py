@@ -65,7 +65,7 @@ async def send_to_groups_handler(message: Message, state: FSMContext) -> None:
 
 
 @router.message(F.media_group_id, AdminSendMessageAction.entering_message)
-async def entered_album_handler(message: AlbumMessage, state: FSMContext) -> None:
+async def entered_album_handler(message: Message, state: FSMContext) -> None:
 	# await state.update_data(messages=message.message_ids)
 	# await state.set_state(AdminSendMessageAction.choosing_recipient)
 	# await message.answer("Тепер введіть ID чату")
@@ -153,4 +153,3 @@ async def group_to_manage_selected_handler(callback: CallbackQuery, callback_dat
 async def leave_group_handler(callback: CallbackQuery, callback_data: GroupLeaveCallback, bot: Bot) -> None:
 	await bot.leave_chat(callback_data.tg_id)
 	await bot.send_message(callback.message.chat.id, "OK")
-
