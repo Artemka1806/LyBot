@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Type
 
 from aiogram import Router, F, flags
@@ -16,6 +17,7 @@ router.message.filter(MagicData(F.user))
 
 class UserStatus(StatesGroup):
 	sets_status = State()
+	sets_message = State()
 
 
 @router.message(F.text == "🚗 Відвідування")
@@ -38,6 +40,7 @@ async def status_selected(message: Message, state: FSMContext, user: Type) -> No
 		return
 
 	user.status = ass.ANSWER_OPTIONS.index(message.text)
+	user.status_updated_at = datetime.timestamp(datetime.now())
 	await user.commit()
 
 	await state.clear()

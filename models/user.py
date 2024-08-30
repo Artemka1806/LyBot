@@ -17,4 +17,6 @@ class User(Document):
 	group = fields.StringField(max_length=4)
 	role = fields.IntField(default=0)
 	status = fields.IntegerField(min_value=0, max_value=3, default=3)
+	status_updated_at = fields.FloatField(default=datetime.datetime.timestamp(datetime.datetime.now()))
+	status_message = fields.StringField()
 	created_at = fields.DateTimeField(default=datetime.datetime.utcnow)
