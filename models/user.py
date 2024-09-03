@@ -9,7 +9,7 @@ from .common import instance
 class User(Document):
 	tg_id = fields.IntegerField(unique=True)
 	name = fields.StringField(max_length=64)
-	username = fields.StringField(max_length=32)
+	username = fields.StringField(max_length=32, allow_none=True)
 	given_name = fields.StringField()
 	family_name = fields.StringField()
 	email = fields.EmailField(required=True, unique=True)
