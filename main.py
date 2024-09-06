@@ -22,6 +22,7 @@ from handlers import ROUTERS
 from models.common import instance
 from keyboards import main_menu
 from middlewares.throttlinig import ThrottlingMiddleware
+from utils.change_users_status import change_users_status
 
 load_dotenv()
 
@@ -90,10 +91,15 @@ def save_api_data():
 async def main():
 	if getenv("DISABLE_SCHEDULER") is None:
 		from apscheduler.schedulers.background import BackgroundScheduler
+		from apscheduler.schedulers.asyncio import AsyncIOScheduler
 		scheduler = BackgroundScheduler()
 		scheduler.configure(timezone="Europe/Kyiv")
 		scheduler.add_job(save_api_data, 'interval', minutes=5)
 		scheduler.start()
+		aioscheduler = AsyncIOScheduler()
+		aioscheduler.configure(timezone="Europe/Kyiv")
+		aioscheduler.add_job(change_users_status, 'cron', hour=16, minute=0)
+		aioscheduler.start()
 	try:
 		await bot.delete_webhook(drop_pending_updates=True)
 		await dp.start_polling(bot)
