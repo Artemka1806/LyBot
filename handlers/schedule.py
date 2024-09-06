@@ -3,6 +3,7 @@ from enum import Enum
 import json
 from os import getenv
 from typing import Type
+import pytz
 
 from aiogram import Bot, Router, F, flags, html
 from aiogram.types import Message, URLInputFile, CallbackQuery
@@ -47,7 +48,7 @@ async def answer_with_schedule(
 	action: Action = Action.ANSWER,
 	schedule_time: ScheduleTime = ScheduleTime.NOW,
 	week: int = get_week_number(datetime.strptime(json.loads(r.get("time_managment"))["FirstWeek"], '%d.%m.%Y')),
-	day: int = datetime.weekday(datetime.now()),
+	day: int = datetime.weekday(datetime.now(pytz.utc).astimezone(pytz.timezone('Europe/Kiev'))),
 ):
 	try:
 		next_day = day + 1
