@@ -47,7 +47,7 @@ async def bot_added_to_group(event: ChatMemberUpdated, bot: Bot):
 			)
 			await group.commit()
 
-		await event.answer("A placeholder. I will replace it later.")
+		await event.answer("👋")
 
 
 @router.my_chat_member(
