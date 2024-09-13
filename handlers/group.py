@@ -58,3 +58,8 @@ async def bot_left_group(event: ChatMemberUpdated, bot: Bot):
 	group = await Group.find_one({"tg_id": event.chat.id})
 	if group:
 		await group.delete()
+
+
+@router.message(F.new_chat_member, ~F.new_chat_member.is_bot, F.chat.id.in_({-1001904185128, -4283931949}))
+async def new_member(message: Message):
+	await message.reply("+ раб 🤑")
