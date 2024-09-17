@@ -39,7 +39,7 @@ async def logout(callback: CallbackQuery, user: Type, bot: Bot):
 	await user.delete()
 	await callback.message.delete()
 	await callback.answer("Успішно!")
-	await callback.message.answer("Будь ласка, увійдіть за допомогою /login")
+	await callback.message.answer("Будь ласка, увійдіть за допомогою /start")
 
 
 @router.callback_query(F.data == "logout:no")
