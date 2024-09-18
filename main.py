@@ -98,7 +98,7 @@ async def main():
 		scheduler.start()
 		aioscheduler = AsyncIOScheduler()
 		aioscheduler.configure(timezone="Europe/Kyiv")
-		aioscheduler.add_job(change_users_status, 'cron', hour=16, minute=0)
+		aioscheduler.add_job(change_users_status, 'cron', hour=20, minute=0)
 		aioscheduler.start()
 	try:
 		await bot.delete_webhook(drop_pending_updates=True)
