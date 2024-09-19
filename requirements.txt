@@ -2,7 +2,8 @@ aiogram==3.10.0
 aiogram_album==0.0.4b0
 APScheduler==3.10.4
 cachetools==5.4.0
-motor==3.1.1
+motor==3.4.0
+pymongo==4.8.0
 python-dotenv==1.0.1
 redis==5.0.7
 requests==2.32.3
