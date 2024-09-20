@@ -23,6 +23,7 @@ from models.common import instance
 from keyboards import main_menu
 from middlewares.throttlinig import ThrottlingMiddleware
 from utils.change_users_status import change_users_status
+from utils.bulk_mailing import bulk_mailing
 
 load_dotenv()
 
@@ -32,6 +33,7 @@ USE_TEST_SERVER = getenv("USE_TEST_SERVER")
 MONGO_URI = getenv("MONGO_URI")
 REDIS_URL = getenv("REDIS_URL")
 API_URL = getenv("API_URL")
+ERROR_LOG_CHAT_ID = getenv("ERROR_LOG_CHAT_ID")
 
 client = AsyncIOMotorClient(MONGO_URI)
 db = client.data
@@ -98,7 +100,8 @@ async def main():
 		scheduler.start()
 		aioscheduler = AsyncIOScheduler()
 		aioscheduler.configure(timezone="Europe/Kyiv")
-		aioscheduler.add_job(change_users_status, 'cron', hour=20, minute=0)
+		aioscheduler.add_job(change_users_status, "cron", hour=20, minute=0)
+		aioscheduler.add_job(bulk_mailing, "cron", hour=8, minute=5, args=[bot, "Не забудьте змінити свій статус", ERROR_LOG_CHAT_ID])
 		aioscheduler.start()
 	try:
 		await bot.delete_webhook(drop_pending_updates=True)
