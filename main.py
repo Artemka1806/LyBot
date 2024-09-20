@@ -89,6 +89,12 @@ def save_api_data():
 	r.set("time_managment", json.dumps(data[0]["TimeManagementData"]))
 	r.set("last_save", int(time.time()))
 
+async def send_reminder():
+	current_day_of_week = time.localtime().tm_wday
+	if current_day_of_week <5:
+		await bulk_mailing(bot, "Не забудьте змінити свій статус", ERROR_LOG_CHAT_ID)
+
+
 
 async def main():
 	if getenv("DISABLE_SCHEDULER") is None:
@@ -101,7 +107,7 @@ async def main():
 		aioscheduler = AsyncIOScheduler()
 		aioscheduler.configure(timezone="Europe/Kyiv")
 		aioscheduler.add_job(change_users_status, "cron", hour=20, minute=0)
-		aioscheduler.add_job(bulk_mailing, "cron", hour=8, minute=5, args=[bot, "Не забудьте змінити свій статус", ERROR_LOG_CHAT_ID])
+		aioscheduler.add_job(send_reminder, "cron", hour=8, minute=5)
 		aioscheduler.start()
 	try:
 		await bot.delete_webhook(drop_pending_updates=True)
