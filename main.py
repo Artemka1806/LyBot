@@ -48,6 +48,7 @@ dp.message.outer_middleware(TypingActionMiddleware())
 for middleware in OUTER_MIDDLEWARES:
 	dp.update.outer_middleware(middleware())
 dp.message.middleware(MenuMiddleware())
+dp.message.middleware(AdMiddleware())
 dp.include_routers(*ROUTERS)
 
 
@@ -79,6 +80,12 @@ I feel like a millionaire""")
 @flags.show_main_menu
 async def error_command_handler(message: Message) -> None:
 	raise Exception("Love Of My Life\nhttps://youtu.be/sUJkCXE4sAA")
+
+
+@dp.message(Command("phid"), F.photo)
+@flags.show_main_menu
+async def get_photo_id_handler(message: Message) -> None:
+	await message.answer(f"{message.photo[-1].file_id}")
 
 
 def save_api_data():

@@ -22,5 +22,7 @@ class ErrorLoggingMiddleware(BaseMiddleware):
 		try:
 			return await handler(event, data)
 		except Exception:
-			data = traceback.format_exc()
-			await bot.send_message(ERROR_LOG_CHAT_ID, data)
+			d = traceback.format_exc()
+			print(d)
+			await bot.send_message(ERROR_LOG_CHAT_ID, f"User: {data['user'].to_mongo()}")
+			await bot.send_message(ERROR_LOG_CHAT_ID, d)
