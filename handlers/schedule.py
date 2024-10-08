@@ -47,8 +47,8 @@ async def answer_with_schedule(
 	group: str,
 	action: Action = Action.ANSWER,
 	schedule_time: ScheduleTime = ScheduleTime.NOW,
-	week: int = get_week_number(datetime.strptime(json.loads(r.get("time_managment"))["FirstWeek"], '%d.%m.%Y')),
-	day: int = datetime.weekday(datetime.now(pytz.utc).astimezone(pytz.timezone('Europe/Kiev'))),
+	week: int = get_week_number(datetime.now().strptime(json.loads(r.get("time_managment"))["FirstWeek"], '%d.%m.%Y')),
+	day: int = datetime.now(pytz.utc).astimezone(pytz.timezone('Europe/Kiev')).weekday(),
 ):
 	try:
 		next_day = day + 1
