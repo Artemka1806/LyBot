@@ -96,11 +96,11 @@ def save_api_data():
 	r.set("time_managment", json.dumps(data[0]["TimeManagementData"]))
 	r.set("last_save", int(time.time()))
 
+
 async def send_reminder():
 	current_day_of_week = time.localtime().tm_wday
-	if current_day_of_week <5:
+	if current_day_of_week < 5:
 		await bulk_mailing(bot, "Не забудьте змінити свій статус", ERROR_LOG_CHAT_ID)
-
 
 
 async def main():
