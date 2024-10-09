@@ -23,15 +23,15 @@ class AdMiddleware(BaseMiddleware):
 		data: Dict[str, Any],
 	) -> Any:
 
-		if event.text in AD_WORDS:
-			bot = data["bot"]
-			builder = InlineKeyboardBuilder()
-			builder.row(
-				InlineKeyboardButton(text="Дізнатися більше", url=AD_URL)
-			)
-			try:
-				await bot.send_photo(chat_id=event.chat.id, photo=AD_IMAGE_URL, reply_markup=builder.as_markup())
-			except Exception as e:
-				print(e)
+		# if event.text in AD_WORDS:
+		# 	bot = data["bot"]
+		# 	builder = InlineKeyboardBuilder()
+		# 	builder.row(
+		# 		InlineKeyboardButton(text="Дізнатися більше", url=AD_URL)
+		# 	)
+		# 	try:
+		# 		await bot.send_photo(chat_id=event.chat.id, photo=AD_IMAGE_URL, reply_markup=builder.as_markup())
+		# 	except Exception as e:
+		# 		print(e)
 
 		return await handler(event, data)
