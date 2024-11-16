@@ -5,6 +5,7 @@ cachetools==5.4.0
 motor==3.4.0
 pymongo==4.8.0
 python-dotenv==1.0.1
+pytz==2024.2
 redis==5.0.7
 requests==2.32.3
 umongo==3.1.0
