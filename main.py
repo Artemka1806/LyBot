@@ -167,7 +167,8 @@ async def get_attendance(timestamp: float = -1.0):
         d = doc.to_mongo()
         data.append(d)
 
-    data = sorted(data, key=lambda x: x.get('family_name', ''))
+    # Sort by ztu_name if available, otherwise by family_name + given_name
+    data = sorted(data, key=lambda x: x.get('ztu_name') or f"{x.get('family_name', '')} {x.get('given_name', '')}")
     result = {}
 
     for entry in data:
