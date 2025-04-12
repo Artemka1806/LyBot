@@ -1,5 +1,6 @@
 from .admin import router as AdminRouter
 from .attendance import router as AttendanceRouter
+from .commands import router as CommandsRouter
 from .donation import router as DonationRouter
 from .group import router as GroupRouter
 from .login import router as LoginRouter
@@ -8,7 +9,9 @@ from .settings import router as SettingsRouter
 
 ROUTERS = (
 	AdminRouter,
-	AttendanceRouter, DonationRouter,
+	AttendanceRouter, 
+	CommandsRouter,
+	DonationRouter,
 	GroupRouter,
 	ScheduleRouter,
 	SettingsRouter,

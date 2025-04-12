@@ -40,6 +40,8 @@ from keyboards import main_menu
 from middlewares.throttlinig import ThrottlingMiddleware
 from utils.change_users_status import change_users_status
 from utils.bulk_mailing import bulk_mailing
+# Import the API router
+from routers.api import router as api_router, init_redis as init_api_redis
 
 load_dotenv()
 
@@ -69,6 +71,8 @@ instance.set_db(db)
 
 # Redis setup
 r = redis.Redis.from_url(url=REDIS_URL)
+# Initialize Redis client in API router
+init_api_redis(r)
 
 # Bot initialization
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -108,6 +112,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include the API router
+app.include_router(api_router)
+
 # Aiogram Dispatcher setup
 storage = RedisStorage.from_url(REDIS_URL)
 dp = Dispatcher(storage=storage)
@@ -118,68 +125,6 @@ for middleware in OUTER_MIDDLEWARES:
 dp.message.middleware(MenuMiddleware())
 dp.message.middleware(AdMiddleware())
 dp.include_routers(*ROUTERS)
-
-
-@dp.message(CommandStart(), MagicData(F.user))
-async def start_command_handler(message: Message, user: Type) -> None:
-    await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!", reply_markup=main_menu.keyboard(user))
-
-
-@dp.message(Command("waltz"))
-@flags.show_main_menu
-async def waltz_command_handler(message: Message) -> None:
-    await message.answer("""Bring out the charge of the love brigade
-There is spring in the air once again
-Drink to the sound of the song parade
-There is music and love everywhere
-Give a little love to me (I want it)
-Take a little love from me
-I wanna share it with you
-I feel like a millionaire""")
-
-
-@dp.message(Command("error"))
-@flags.show_main_menu
-async def error_command_handler(message: Message) -> None:
-    raise Exception("Love Of My Life\nhttps://youtu.be/sUJkCXE4sAA")
-
-
-@dp.message(Command("phid"), F.photo)
-@flags.show_main_menu
-async def get_photo_id_handler(message: Message) -> None:
-    await message.answer(f"{message.photo[-1].file_id}")
-
-
-@dp.message(Command("copy"))
-@flags.show_main_menu
-async def copy_message_handler(message: Message) -> None:
-    # Check if the message is a reply
-    if not message.reply_to_message:
-        await message.answer("Ця команда має бути відповіддю на повідомлення.")
-        return
-    
-    # Get the chat ID from the command arguments
-    args = message.text.split()
-    if len(args) != 2:
-        await message.answer("Використання: /copy chat_id")
-        return
-    
-    try:
-        chat_id = int(args[1])
-    except ValueError:
-        await message.answer("Невірний ID чату. Будь ласка, вкажіть правильний числовий ID.")
-        return
-    
-    try:
-        # Copy the message to the specified chat
-        await bot.copy_message(
-            chat_id=chat_id,
-            from_chat_id=message.chat.id,
-            message_id=message.reply_to_message.message_id
-        )
-        await message.answer(f"Повідомлення скопійовано в чат {chat_id}")
-    except Exception as e:
-        await message.answer(f"Помилка: {str(e)}")
 
 
 def save_api_data():
@@ -195,78 +140,6 @@ async def send_reminder():
     current_day_of_week = time.localtime().tm_wday
     if current_day_of_week < 5:
         await bulk_mailing(bot, "Не забудьте змінити свій статус", ERROR_LOG_CHAT_ID)
-
-
-# API Endpoints (from LyBotAPI)
-class ElectionFormData(BaseModel):
-    name: str
-    email: str
-    question: str
-
-
-@app.head("/")
-@app.get("/")
-async def index():
-    """
-    Why not?
-    """
-    return {"text": "I don't think you're supposed to be here."}
-
-
-@app.get("/attendance")
-async def get_attendance(timestamp: float = -1.0):
-    # Query users with updated status after the given timestamp
-    data = []
-    for doc in await User.find({"status_updated_at": {"$gt": timestamp}}).to_list(length=None):
-        d = doc.to_mongo()
-        data.append(d)
-
-    # Sort by ztu_name if available, otherwise by family_name + given_name
-    data = sorted(data, key=lambda x: x.get('ztu_name') or f"{x.get('family_name', '')} {x.get('given_name', '')}")
-    result = {}
-
-    for entry in data:
-        # Get group information
-        group = entry.get("group")
-        if group is None:
-            continue
-            
-        # Get class number (first part of group) and subgroup (full group name)
-        class_num = group.split('-')[0]
-        subgroup = group
-        
-        # Create nested dictionaries for classes and groups if they don't exist
-        if class_num not in result:
-            result[class_num] = {}
-        if subgroup not in result[class_num]:
-            result[class_num][subgroup] = {}
-        
-        full_name = entry.get("ztu_name") or f"{entry.get('family_name', '')} {entry.get('given_name', '')}"
-        
-        # Create object for each student using dictionary attributes
-        # Store with full_name as the key for backward compatibility
-        result[class_num][subgroup][full_name] = {
-            "name": full_name,
-            "avatar_url": entry.get("avatar_url", ""),
-            "status_updated_at": entry.get("status_updated_at"),
-            "status": entry.get("status", 3),
-            "message": entry.get("status_message", "")
-        }
-    
-    # Function for sorting subgroups by numerical and alphabetical parts
-    def sort_key(subgroup):
-        match = re.match(r"(\d+)-([А-Яа-я])", subgroup)
-        if match:
-            return (int(match.group(1)), match.group(2))
-        return (0, subgroup)
-    
-    # Sort classes and subgroups
-    sorted_result = {
-        class_num: dict(sorted(result[class_num].items(), key=lambda x: sort_key(x[0])))
-        for class_num in sorted(result.keys(), key=int)
-    }
-    
-    return sorted_result
 
 
 # Telegram webhook handlers
