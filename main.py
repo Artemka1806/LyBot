@@ -185,9 +185,8 @@ async def get_attendance(timestamp: float = -1.0):
             result[class_num] = {}
         if subgroup not in result[class_num]:
             result[class_num][subgroup] = {}
-            
-        # Format the user's full name
-        full_name = f"{entry.get('family_name', '')} {entry.get('given_name', '')}"
+        
+        full_name = entry.get("ztu_name") or f"{entry.get('family_name', '')} {entry.get('given_name', '')}"
         
         # Create object for each student using dictionary attributes
         # Store with full_name as the key for backward compatibility
