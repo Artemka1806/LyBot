@@ -251,10 +251,6 @@ async def on_startup():
 
 
 async def on_shutdown():
-    # Remove webhooks
-    await main_bot.delete_webhook()
-    await test_bot.delete_webhook()
-    
     # Close bot sessions
     await main_bot.session.close()
     await test_bot.session.close()
