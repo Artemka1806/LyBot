@@ -70,9 +70,8 @@ instance.set_db(db)
 r = redis.Redis.from_url(url=REDIS_URL)
 
 # Bot initialization
-main_bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-test_bot = Bot(token=TEST_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-bot = test_bot if USE_TEST_SERVER == "1" else main_bot
+bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+
 
 # FastAPI app initialization
 app = FastAPI()
@@ -220,24 +219,14 @@ async def get_attendance(timestamp: float = -1.0):
 async def webhook_handler(request: Request):
     """Handle webhook updates for main bot"""
     update_data = await request.json()
-    update = Update.model_validate(update_data, context={"bot": main_bot})
-    await dp.feed_update(bot=main_bot, update=update)
-    return {"ok": True}
-
-
-@app.post(WEBHOOK_PATH_TEST)
-async def webhook_test_handler(request: Request):
-    """Handle webhook updates for test bot"""
-    update_data = await request.json()
-    update = Update.model_validate(update_data, context={"bot": test_bot})
-    await dp.feed_update(bot=test_bot, update=update)
+    update = Update.model_validate(update_data, context={"bot": bot})
+    await dp.feed_update(bot=bot, update=update)
     return {"ok": True}
 
 
 async def on_startup():
     # Set up webhooks for bots
-    await main_bot.set_webhook(url=WEBHOOK_URL, drop_pending_updates=True)
-    await test_bot.set_webhook(url=WEBHOOK_URL_TEST, drop_pending_updates=True)
+    await bot.set_webhook(url=WEBHOOK_URL, drop_pending_updates=True)
 
     # Set up schedulers
     if getenv("DISABLE_SCHEDULER") is None:
@@ -252,8 +241,7 @@ async def on_startup():
 
 async def on_shutdown():
     # Close bot sessions
-    await main_bot.session.close()
-    await test_bot.session.close()
+    await bot.session.close()
 
 
 if __name__ == "__main__":
