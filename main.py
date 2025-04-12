@@ -164,19 +164,21 @@ async def get_attendance(timestamp: float = -1.0):
     # Query users with updated status after the given timestamp
     users = await User.find({"status_updated_at": {"$gt": timestamp}}).to_list(length=None)
     
-    # Sort users by family name
-    users.sort(key=lambda user: user.family_name or "")
+    # Convert User objects to dictionaries and sort by family name
+    user_dicts = [user.to_mongo() for user in users]
+    user_dicts = sorted(user_dicts, key=lambda x: x.get('family_name', ''))
     
     result = {}
     
-    for user in users:
-        # Skip users without a group
-        if not user.group:
+    for entry in user_dicts:
+        # Get group information
+        group = entry.get("group")
+        if group is None:
             continue
             
         # Get class number (first part of group) and subgroup (full group name)
-        class_num = user.group.split('-')[0]
-        subgroup = user.group
+        class_num = group.split('-')[0]
+        subgroup = group
         
         # Create nested dictionaries for classes and groups if they don't exist
         if class_num not in result:
@@ -185,15 +187,15 @@ async def get_attendance(timestamp: float = -1.0):
             result[class_num][subgroup] = []
             
         # Format the user's full name
-        full_name = f"{user.family_name or ''} {user.given_name or ''}"
+        full_name = f"{entry.get('family_name', '')} {entry.get('given_name', '')}"
         
-        # Create object for each student using the model attributes
+        # Create object for each student using the dictionary attributes
         result[class_num][subgroup].append({
             "name": full_name,
-            "avatar_url": user.avatar_url or "",
-            "status_updated_at": user.status_updated_at,
-            "status": user.status if user.status is not None else 3,
-            "message": user.status_message or ""
+            "avatar_url": entry.get("avatar_url", ""),
+            "status_updated_at": entry.get("status_updated_at"),
+            "status": entry.get("status", 3),
+            "message": entry.get("status_message", "")
         })
     
     # Function for sorting subgroups by numerical and alphabetical parts
