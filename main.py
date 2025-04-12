@@ -150,6 +150,38 @@ async def get_photo_id_handler(message: Message) -> None:
     await message.answer(f"{message.photo[-1].file_id}")
 
 
+@dp.message(Command("copy"))
+@flags.show_main_menu
+async def copy_message_handler(message: Message) -> None:
+    # Check if the message is a reply
+    if not message.reply_to_message:
+        await message.answer("Ця команда має бути відповіддю на повідомлення.")
+        return
+    
+    # Get the chat ID from the command arguments
+    args = message.text.split()
+    if len(args) != 2:
+        await message.answer("Використання: /copy chat_id")
+        return
+    
+    try:
+        chat_id = int(args[1])
+    except ValueError:
+        await message.answer("Невірний ID чату. Будь ласка, вкажіть правильний числовий ID.")
+        return
+    
+    try:
+        # Copy the message to the specified chat
+        await bot.copy_message(
+            chat_id=chat_id,
+            from_chat_id=message.chat.id,
+            message_id=message.reply_to_message.message_id
+        )
+        await message.answer(f"Повідомлення скопійовано в чат {chat_id}")
+    except Exception as e:
+        await message.answer(f"Помилка: {str(e)}")
+
+
 def save_api_data():
     data = requests.get(API_URL + "/api/schedule").json()
     r.set("schedule", json.dumps(data[0]["Schedule"]))
