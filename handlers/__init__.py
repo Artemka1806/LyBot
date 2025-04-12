@@ -10,6 +10,7 @@ ROUTERS = (
 	AdminRouter,
 	AttendanceRouter, DonationRouter,
 	GroupRouter,
-	LoginRouter, ScheduleRouter,
-	SettingsRouter
+	ScheduleRouter,
+	SettingsRouter,
+    LoginRouter
 )

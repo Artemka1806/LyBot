@@ -8,4 +8,8 @@ python-dotenv==1.0.1
 pytz==2024.2
 redis==5.0.7
 requests==2.32.3
+ldap3==2.9.1
 umongo==3.1.0
+fastapi==0.112.0
+uvicorn==0.29.0
+pydantic==2.6.3
