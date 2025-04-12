@@ -20,7 +20,7 @@ from aiogram.methods import SetWebhook
 from aiogram.types import Update
 from aiohttp import web
 from dotenv import load_dotenv
-from fastapi import FastAPI, Form, status, Request
+from fastapi import FastAPI, Form, status, Request, lifespan
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from marshmallow.exceptions import ValidationError
@@ -30,6 +30,7 @@ from pymongo.errors import DuplicateKeyError
 import redis
 import requests
 import uvicorn
+from contextlib import asynccontextmanager
 
 from middlewares import *
 from handlers import ROUTERS
@@ -74,7 +75,29 @@ bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 
 # FastAPI app initialization
-app = FastAPI()
+@asynccontextmanager
+async def lifespan_context(app: FastAPI):
+    # Set up webhooks for bot
+    await bot.set_webhook(url=WEBHOOK_URL)
+    logging.info(f"Webhook set successfully to {WEBHOOK_URL}")
+
+    # Set up schedulers
+    if getenv("DISABLE_SCHEDULER") is None:
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        scheduler = AsyncIOScheduler()
+        scheduler.configure(timezone="Europe/Kyiv")
+        scheduler.add_job(save_api_data, 'interval', minutes=5)
+        scheduler.add_job(change_users_status, "cron", hour=20, minute=0)
+        scheduler.add_job(send_reminder, "cron", hour=8, minute=5)
+        scheduler.start()
+    
+    yield  # App runs here
+    
+    # Shutdown code (previously in on_shutdown)
+    await bot.session.close()
+
+# Update FastAPI app initialization to use the lifespan
+app = FastAPI(lifespan=lifespan_context)
 
 # Configure CORS for API
 app.add_middleware(
@@ -224,33 +247,9 @@ async def webhook_handler(request: Request):
     return {"ok": True}
 
 
-async def on_startup():
-    # Set up webhooks for bots
-    await bot.set_webhook(url=WEBHOOK_URL, drop_pending_updates=True)
-
-    # Set up schedulers
-    if getenv("DISABLE_SCHEDULER") is None:
-        from apscheduler.schedulers.asyncio import AsyncIOScheduler
-        scheduler = AsyncIOScheduler()
-        scheduler.configure(timezone="Europe/Kyiv")
-        scheduler.add_job(save_api_data, 'interval', minutes=5)
-        scheduler.add_job(change_users_status, "cron", hour=20, minute=0)
-        scheduler.add_job(send_reminder, "cron", hour=8, minute=5)
-        scheduler.start()
-
-
-async def on_shutdown():
-    # Close bot sessions
-    await bot.session.close()
-
-
 if __name__ == "__main__":
     # Setup logging
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    
-    # Setup startup and shutdown events
-    app.add_event_handler("startup", on_startup)
-    app.add_event_handler("shutdown", on_shutdown)
     
     # Run the FastAPI application with Uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
