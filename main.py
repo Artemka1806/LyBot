@@ -162,15 +162,15 @@ async def index():
 @app.get("/attendance")
 async def get_attendance(timestamp: float = -1.0):
     # Query users with updated status after the given timestamp
-    users = await User.find({"status_updated_at": {"$gt": timestamp}}).to_list(length=None)
-    
-    # Convert User objects to dictionaries and sort by family name
-    user_dicts = [user.to_mongo() for user in users]
-    user_dicts = sorted(user_dicts, key=lambda x: x.get('family_name', ''))
-    
+    data = []
+    for doc in await User.find({"status_updated_at": {"$gt": timestamp}}).to_list(length=None):
+        d = doc.to_mongo()
+        data.append(d)
+
+    data = sorted(data, key=lambda x: x.get('family_name', ''))
     result = {}
-    
-    for entry in user_dicts:
+
+    for entry in data:
         # Get group information
         group = entry.get("group")
         if group is None:
@@ -184,19 +184,20 @@ async def get_attendance(timestamp: float = -1.0):
         if class_num not in result:
             result[class_num] = {}
         if subgroup not in result[class_num]:
-            result[class_num][subgroup] = []
+            result[class_num][subgroup] = {}
             
         # Format the user's full name
         full_name = f"{entry.get('family_name', '')} {entry.get('given_name', '')}"
         
-        # Create object for each student using the dictionary attributes
-        result[class_num][subgroup].append({
+        # Create object for each student using dictionary attributes
+        # Store with full_name as the key for backward compatibility
+        result[class_num][subgroup][full_name] = {
             "name": full_name,
             "avatar_url": entry.get("avatar_url", ""),
             "status_updated_at": entry.get("status_updated_at"),
             "status": entry.get("status", 3),
             "message": entry.get("status_message", "")
-        })
+        }
     
     # Function for sorting subgroups by numerical and alphabetical parts
     def sort_key(subgroup):
