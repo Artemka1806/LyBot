@@ -1,6 +1,6 @@
 import re
 
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from models.user import User
@@ -14,12 +14,6 @@ redis_client = None
 def init_redis(client):
     global redis_client
     redis_client = client
-
-# API Models
-class ElectionFormData(BaseModel):
-    name: str
-    email: str
-    question: str
 
 
 @router.head("/")
