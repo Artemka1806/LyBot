@@ -47,68 +47,74 @@ async def answer_with_schedule(
 	group: str,
 	action: Action = Action.ANSWER,
 	schedule_time: ScheduleTime = ScheduleTime.NOW,
-	week: int = get_week_number(datetime.now().strptime(json.loads(r.get("time_managment"))["FirstWeek"], '%d.%m.%Y')),
-	day: int = datetime.now(pytz.utc).astimezone(pytz.timezone('Europe/Kiev')).weekday(),
+	week: int = 0,
+	
 ):
-	try:
-		next_day = day + 1
-		next_week = week
+    try:
+        week = get_week_number(datetime.now().strptime(json.loads(r.get("time_managment"))["FirstWeek"], '%d.%m.%Y'))
+        day = datetime.now(pytz.utc).astimezone(pytz.timezone('Europe/Kiev')).weekday(),
+    except Exception as e:
+        week = 0
+        day = 0
+    try:
+        next_day = day + 1
+        next_week = week
 
-		previous_day = day - 1
-		previous_week = week
+        previous_day = day - 1
+        previous_week = week
 
-		if schedule_time == ScheduleTime.NOW:
-			if day > 4:
-				day = 0
-				week = week + 1 if week < 3 else 0
-				next_day = 1
-				next_week = week
+        if schedule_time == ScheduleTime.NOW:
+            if day > 4:
+                day = 0
+                week = week + 1 if week < 3 else 0
+                next_day = 1
+                next_week = week
 
-		if day == 4:
-			next_day = 0
-			if week == 3:
-				next_week = 0
-			else:
-				next_week += 1
-		elif day == 0:
-			previous_day = 4
-			if week == 0:
-				previous_week = 3
-			else:
-				previous_week -= 1
+        if day == 4:
+            next_day = 0
+            if week == 3:
+                next_week = 0
+            else:
+                next_week += 1
+        elif day == 0:
+            previous_day = 4
+            if week == 0:
+                previous_week = 3
+            else:
+                previous_week -= 1
 
-		schedule = Schedule(json.loads(r.get("schedule"))).get_schedule_data(group, week, day)
+        schedule = Schedule(json.loads(r.get("schedule"))).get_schedule_data(group, week, day)
 
-		EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
-		DAYS_OF_WEEK = ["Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця"]
+        EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
+        DAYS_OF_WEEK = ["Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця"]
 
-		bells_data = json.loads(r.get("bells"))
+        bells_data = json.loads(r.get("bells"))
 
-		result = html.bold(f"🗓 Тиждень: {week + 1}\n🕒 {DAYS_OF_WEEK[day]}\n\n")
-		for pair in schedule:
-			i = schedule.index(pair)
-			p_result = f"{EMOJI_NUMBERS[i]} {html.bold(bells_data[i])}\n"
-			for lesson in pair:
-				p_result += f'{html.bold(lesson)}\n' if lesson.name else ''
-			result += f"{p_result}\n"
-		builder = InlineKeyboardBuilder()
-		builder.button(text="◀️", callback_data=ScheduleCallback(group=group, week=previous_week, day=previous_day))
-		builder.button(text="▶️", callback_data=ScheduleCallback(group=group, week=next_week, day=next_day))
-		builder.button(text="⏪", callback_data=ScheduleCallback(group=group, week=week - 1 if week > 0 else 3, day=day))
-		builder.button(text="⏩", callback_data=ScheduleCallback(group=group, week=week + 1 if week < 3 else 0, day=day))
-		builder.button(text="Розклад на тиждень", callback_data=f"week_{week}_{day}")
-		builder.adjust(2)
+        result = html.bold(f"🗓 Тиждень: {week + 1}\n🕒 {DAYS_OF_WEEK[day]}\n\n")
+        for pair in schedule:
+            i = schedule.index(pair)
+            p_result = f"{EMOJI_NUMBERS[i]} {html.bold(bells_data[i])}\n"
+            for lesson in pair:
+                p_result += f'{html.bold(lesson)}\n' if lesson.name else ''
+            result += f"{p_result}\n"
+        builder = InlineKeyboardBuilder()
+        builder.button(text="◀️", callback_data=ScheduleCallback(group=group, week=previous_week, day=previous_day))
+        builder.button(text="▶️", callback_data=ScheduleCallback(group=group, week=next_week, day=next_day))
+        builder.button(text="⏪", callback_data=ScheduleCallback(group=group, week=week - 1 if week > 0 else 3, day=day))
+        builder.button(text="⏩", callback_data=ScheduleCallback(group=group, week=week + 1 if week < 3 else 0, day=day))
+        builder.button(text="Розклад на тиждень", callback_data=f"week_{week}_{day}")
+        builder.adjust(2)
 
-		if action == Action.EDIT:
-			await bot.edit_message_text(result, chat_id=message.chat.id, message_id=message.message_id, reply_markup=builder.as_markup())
-			return
-		else:
-			await message.answer(result, reply_markup=builder.as_markup())
+        if action == Action.EDIT:
+            await bot.edit_message_text(result, chat_id=message.chat.id, message_id=message.message_id, reply_markup=builder.as_markup())
+            return
+        else:
+            await message.answer(result, reply_markup=builder.as_markup())
 
-		return
+        return
 
-	except (KeyError, TypeError):
-		await message.answer(f'{html.bold("Не вдалося знайти розклад для вашої групи")}\nСпробуйте змінити її в налаштуваннях')
+    except (KeyError, TypeError):
+        await message.answer(f'{html.bold("Не вдалося знайти розклад для вашої групи")}\nСпробуйте змінити її в налаштуваннях')
 
 
 @router.message(F.text == "📅 Розклад")
